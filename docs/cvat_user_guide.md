@@ -44,3 +44,45 @@ docker compose logs -f cvat_server
 `deploy/cvat/tooth-sam/nuclio/` 部署了一個互動式 SAM ViT-B 的 Nuclio serverless function
 （`sam_vit_b_01ec64.pth`），CVAT 前端可對單一物件呼叫它取得即時分割結果（框選/加點後即時出 mask），
 適合用來處理批次匯入結果不理想的個別牙齒，或全新加入的影像。
+
+## Tooth YOLO + SAM：先定位再分割
+
+`deploy/cvat/tooth-yolo-sam/nuclio/` 是 GPU Nuclio detector。它使用
+`models/yolo/best.pt` 在目前影像找出牙齒框，再把每個框交給 SAM ViT-B，
+回傳可在 CVAT 編輯的個別牙齒 mask。
+
+在標註頁面按 `Ctrl+Shift+A` 開啟 **AI tools**，切到 **Detectors**，
+選 **Tooth YOLO + SAM Segmentation**，將模型的 `tooth` 對應到 task 的 `tooth` label，
+按 **Annotate**。可調整偵測 confidence threshold，也可指定 ROI。
+執行結果是當前影格的自動標註初稿，請人工檢查並校正。
+
+重新部署前，將 YOLO 與 SAM checkpoint 放入該 function 的建置目錄，檔名分別為
+`best.pt`、`sam_vit_b_01ec64.pth`，再執行：
+
+```bash
+nuctl deploy pth-tooth-yolo-sam-segment --platform local --project-name cvat \
+  --path deploy/cvat/tooth-yolo-sam/nuclio \
+  --file deploy/cvat/tooth-yolo-sam/nuclio/function-gpu.yaml \
+  --platform-config '{"attributes":{"network":"cvat_cvat"}}' \
+  --readiness-timeout 180
+```
+
+## 畫筆人工修正（Mask / Polygon）
+
+本機 CVAT 前端新增 **Brush edit** 入口，可快速補上或擦除分割區域：
+
+1. 開啟 job，在右側物件的 `⋮` 選單選 **Brush edit**。
+2. **Mask** 直接編輯；**Polygon** 選 **Brush edit (save as mask)**，完成時轉為 Mask，因此能保留孔洞及不相連區域。此入口適用於 2D shape，Polygon track 不提供轉換。
+3. 選畫筆補上（`Shift+1`）或橡皮擦移除（`Shift+2`）；可調整筆刷大小與 Circle / Square 筆頭。按住 `Alt` 加滑鼠右鍵左右拖曳可改大小。
+4. 按工具箱的 `✓` 完成，再儲存 job。按 `Esc` 取消本次編輯；取消 Polygon 編輯時不轉換、不替換原物件。
+5. 完成 Polygon 編輯後，一次 Undo（`Ctrl+Z`）可還原原 Polygon；Redo 可恢復修正後的 Mask。轉換保留標籤、屬性、群組、遮擋狀態及圖層，替換後物件 ID 會改變。
+
+畫筆操作期間可使用 CVAT 既有的 Undo / Redo。若把所有像素擦除，CVAT 會取消此次編輯並保留原物件。鎖定物件與 ground-truth 物件不能使用此入口。
+
+原始碼位於 `../cvat`，回歸測試：
+
+```bash
+cd ~/Program/Medical-CV/cvat
+node cvat-ui/tests/polygon-brush.test.cjs
+BABEL_CACHE_PATH=/tmp/cvat-brush-babel-cache.json node cvat-ui/tests/polygon-brush-conversion.test.cjs
+```
