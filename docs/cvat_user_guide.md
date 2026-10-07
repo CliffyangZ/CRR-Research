@@ -86,3 +86,9 @@ cd ~/Program/Medical-CV/cvat
 node cvat-ui/tests/polygon-brush.test.cjs
 BABEL_CACHE_PATH=/tmp/cvat-brush-babel-cache.json node cvat-ui/tests/polygon-brush-conversion.test.cjs
 ```
+
+### SAM 出現 `shapes is not iterable`
+
+2026-10-06 已修復一次 Nuclio 註冊資料與實際容器 port 不一致：SAM 舊容器因 `32768` 已被 YOLO 偵測器占用而停止，但其註冊仍指向 `32768`，使 SAM 呼叫收到偵測器陣列而非 `{ "shapes": [...] }`。SAM 的 CPU / GPU function 設定現已固定使用 `32770`，避免自動分配造成衝突。
+
+遇到同類錯誤時，先比對 `nuctl get function pth-tooth-sam-vit-b --platform local` 的服務狀態，以及 `docker ps` 顯示的 port；確認 SAM 容器 healthy，並且 Nuclio 登記的 port 指向同一容器。使用既有映像重部署時，部署用設定必須省略 `spec.build`，只提供 `spec.image`；將 `--run-image` 與包含 `spec.build.image` 的建置設定一起使用仍可能觸發重建。
