@@ -1,0 +1,4 @@
+# Additional dependencies used by the recorded preprocessing experiment.
+bm3d==4.0.3
+bm4d==4.2.5
+PyWavelets==1.10.0
