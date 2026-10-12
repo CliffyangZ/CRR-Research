@@ -32,6 +32,16 @@ Notebook 的互動探索放在根目錄 `notebooks/`，可重現的正式實驗�
 所有命令以專案根目錄為工作目錄。新入口必須提供參數說明與小樣本執行方式，
 不得依賴開發者個人的絕對路徑。現有分割入口見 [`src/README.md`](../src/README.md)。
 
+## 牙齒語意分割 U-Net baseline（spec 002，已實作）
+
+- `research/models/unet.py`：U-Net 架構（使用者指定位置）。
+- `research/data/prepare_tooth_seg_dataset.py`：盤點 → 洩漏檢查 → 固定前處理 → tooth 聯集遮罩 → 凍結切分。
+- `research/train/train_tooth_unet.py`：訓練與驗證選模（`--smoke` 小樣本）。
+- `research/evaluation/evaluate_tooth_unet.py`：固定權重測試評估、疊圖與錯誤案例。
+- `research/data/prepare_tooth_roi_dataset.py`（spec 003）：偵測框＋分割多邊形 → 單顆牙 ROI 資料集（一對一配對、CLAHE、256 letterbox、單牙遮罩、凍結切分、驗證報告）；設定 `configs/segmentation/roi_dataset_v1.yaml`，輸出 `data/derived/roi_<data_version>/{train,val,test}/`，報告 `reports/segmentation/roi_<data_version>/`。偵測框審閱狀態為「未知」；僅產生資料集，未訓練模型。
+- 設定：`configs/segmentation/unet_baseline_v1.yaml`；使用步驟見 [`specs/002-train-unet-baseline/quickstart.md`](../specs/002-train-unet-baseline/quickstart.md)；證據在 `reports/segmentation/`。
+- 權重寫入 `models/segmentation/<run_id>/`（不入版本庫，由訓練命令重建）；`data/` 與 `reports/*` 亦被 git 忽略。
+
 ## 資料與評估規則
 
 - 原始影像保持不變；處理後資料保留來源影像與轉換紀錄。

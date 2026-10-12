@@ -71,3 +71,9 @@ SAM／YOLO＋SAM 輸出的 `coco_annotations.json` 與 CVAT ZIP 是偽標註。
 ## reports/detection/
 
 牙齒偵測證據：`<data_version>/data_report.md`、`overlays*/`、`runs/<run_id>/run_manifest.json` 與 `eval/`、`model_candidates.md`、`comparison/report.md`。此目錄受 `reports/*` 忽略規則影響，預設不入版本庫。
+
+## reports/segmentation/
+
+牙齒語意分割 U-Net baseline 證據：`data_audit/README.md`（資料盤點）、`<run_id>/run_manifest.json`、`history.csv`、`eval/`（`metrics.json`、`per_image.csv`、`overlays/`、`README.md`）。權重在 `models/segmentation/<run_id>/`。同樣受 `reports/*` 忽略規則影響，預設不入版本庫。
+
+ROI 資料集（spec 003）的資料驗證報告在 `reports/segmentation/roi_<data_version>/README.md` 與 `overlays/`（資料本體在 `data/derived/roi_<data_version>/`，不入版本庫）。

@@ -1175,6 +1175,11 @@ fastrcnn = [
 segmentation = [
     { name = "segment-anything" },
 ]
+unet = [
+    { name = "imagehash" },
+    { name = "pyyaml" },
+    { name = "torch" },
+]
 yolo = [
     { name = "imagehash" },
     { name = "pycocotools" },
@@ -1184,6 +1189,7 @@ yolo = [
 
 [package.metadata]
 requires-dist = [
+    { name = "imagehash", marker = "extra == 'unet'", specifier = ">=4.3" },
     { name = "imagehash", marker = "extra == 'yolo'", specifier = ">=4.3" },
     { name = "laya", specifier = ">=0.3.20" },
     { name = "matplotlib", specifier = ">=3.11.1" },
@@ -1192,14 +1198,16 @@ requires-dist = [
     { name = "pycocotools", marker = "extra == 'yolo'", specifier = ">=2.0" },
     { name = "pydantic", specifier = ">=2.13.5" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.1.1" },
+    { name = "pyyaml", marker = "extra == 'unet'", specifier = ">=6" },
     { name = "pyyaml", marker = "extra == 'yolo'", specifier = ">=6" },
     { name = "scikit-image", specifier = "==0.26.0" },
     { name = "segment-anything", marker = "extra == 'segmentation'", git = "https://github.com/facebookresearch/segment-anything.git" },
     { name = "selectivesearch", marker = "extra == 'fastrcnn'", specifier = ">=0.4" },
+    { name = "torch", marker = "extra == 'unet'" },
     { name = "torchvision", marker = "extra == 'fastrcnn'" },
     { name = "ultralytics", marker = "extra == 'yolo'", specifier = ">=8.4,<9" },
 ]
-provides-extras = ["dev", "yolo", "fastrcnn", "segmentation"]
+provides-extras = ["dev", "yolo", "unet", "fastrcnn", "segmentation"]
 
 [[package]]
 name = "torch"

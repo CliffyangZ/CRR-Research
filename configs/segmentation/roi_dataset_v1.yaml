@@ -1,0 +1,27 @@
+data:
+  detection_root: data/detection_dataset
+  seg_root: data/seg_dataset
+  tooth_category: tooth
+  ignore_categories: [Metal]
+preprocess:
+  clahe: {clip_limit: 2.0, tile_grid: [8, 8]}
+  input_mapping: {type: linear_uint8, divisor: 255}
+pairing: {min_iou: 0.5, second_margin: 0.1, min_mask_frac: 0.05}
+roi:
+  expand_frac_per_side: 0.10
+  size: 256
+  image_pad: 114
+  mask_pad: 0
+  interp_down: area
+  interp_up: linear
+  mask_interp: nearest
+split: {source: existing, phash_dist: 6, seed: 42}
+augment:
+  prob: 0.5
+  order: [brightness_contrast, rotate, translate]
+  brightness: 0.10
+  contrast: 0.10
+  rotate_deg: 5
+  translate_frac: 0.05
+  truncation: {tolerance: 0.005, margin_frac: 0.25}
+  disabled: [scale, flip, mosaic, mixup, crop, elastic]

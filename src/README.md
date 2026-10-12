@@ -17,12 +17,16 @@ src/
 │       ├── sam_infer.py      # SAM box／point prompt 分割與輸出
 │       └── yolo_sam_coco.py  # YOLO 偵測框引導 SAM，輸出 pseudo-label
 ├── data/                   # 保留給共用資料處理，目前沒有實作
-└── detection/              # 牙齒偵測：inventory、preprocess(NLM→CLAHE→USM)、letterbox、splits、augment、
+├── detection/              # 牙齒偵測：inventory、preprocess(NLM→CLAHE→USM)、letterbox、splits、augment、
                             # dataset_export、evaluate、provenance、models、train_args（測試：tests/detection）
+└── segmentation/           # 牙齒二元語意分割（spec 002）：config、inventory、masks、transform、augment、
+                            # dataset、losses、metrics、train、report（重用 detection 的前處理／letterbox／splits／provenance；
+                            # 測試：tests/segmentation；U-Net 架構在 research/models/unet.py）；
+                            # spec 003 另有 roi_config、pairing、roi、roi_dataset、roi_report（單顆牙 ROI 資料集）
 ```
 
 `core/testing.py` 目前只有說明字串，不是測試框架。
-目前沒有訓練入口或 CRR 計算模組；舊文件中的 `src/models/` 與
+目前沒有 CRR 計算模組（訓練入口在 `research/train/`）；舊文件中的 `src/models/` 與
 `src/data/preprocess.py` 等路徑不能視為現有可執行功能。
 
 ## 實作原則
