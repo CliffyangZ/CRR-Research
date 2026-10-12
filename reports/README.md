@@ -67,3 +67,7 @@ SAM／YOLO＋SAM 輸出的 `coco_annotations.json` 與 CVAT ZIP 是偽標註。
 目前 `.gitignore` 忽略 `reports/` 的產物，僅例外保留本 `README.md`；
 因此本機結果仍需另行備份，不能把未入版控的檔案當作其他人必定能取得的證據。
 研究結論必須附資料與產物取得方式，或明確說明存取限制。
+
+## reports/detection/
+
+牙齒偵測證據：`<data_version>/data_report.md`、`overlays*/`、`runs/<run_id>/run_manifest.json` 與 `eval/`、`model_candidates.md`、`comparison/report.md`。此目錄受 `reports/*` 忽略規則影響，預設不入版本庫。

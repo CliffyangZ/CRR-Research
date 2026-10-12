@@ -1,0 +1,15 @@
+nlm:      {h: 10, template_window: 7, search_window: 21}
+clahe:    {clip_limit: 2.0, tile_grid: [8, 8]}
+usm:      {sigma: 1.0, amount: 0.5, threshold: 0}
+input_mapping: {type: linear_uint8, divisor: 255}
+letterbox: {size: 640, pad_value: 114, interp_down: area, interp_up: linear}
+augment:
+  copies_per_train_image: 3
+  seed: 20261009
+  prob: 0.5
+  order: [brightness_contrast, rotate, translate]
+  brightness: 0.10
+  contrast: 0.10
+  rotate_deg: 5
+  translate_frac: 0.05
+  disabled: [scale, flip, mosaic, mixup, crop, elastic]

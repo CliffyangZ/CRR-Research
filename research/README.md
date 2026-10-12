@@ -57,3 +57,22 @@ Notebook 的互動探索放在根目錄 `notebooks/`，可重現的正式實驗�
 範例紀錄格式見 [`reports/README.md`](../reports/README.md)。
 專案原則見 [constitution](../.specify/memory/constitution.md)；
 本次目錄分工規格見 [spec](../specs/001-document-ml-structure/spec.md)。
+
+## 牙齒偵測訓練（specs/001-train-tooth-detection）
+
+```bash
+python -m research.data.prepare_tooth_dataset [--limit 12]          # 盤點→前處理→切分→增強→匯出 data/derived/<dv>
+python -m research.train.train_tooth_detection --data-version <dv> --model {v8,v11,v26} [--smoke] --device 0
+python -m research.evaluation.evaluate_tooth_detection --run reports/detection/runs/<run_id> --device 0
+python -m research.evaluation.compare_runs --runs <run_dir>... --output reports/detection/comparison
+```
+
+驗證：`python -m pytest tests/detection`。既有 `tests/` 中部分舊測試仍引用已移除的 `src/models/`，未納入此驗證。
+
+訓練目錄命名：`v8_dv-20261009-01_1009-170021`（模型、資料版本、台北時間）。
+可加 `--experiment baseline` 標記實驗；完整參數保存在 `run_manifest.json`。
+名稱中的 batch 等參數不再列出；既有實驗目錄保留原名。同一秒重複啟動相同名稱會拒絕覆寫。
+
+`train_tooth_yolo --model fastrcnn` 訓練 Fast R-CNN（VGG16、RoIPool、selective search 提案；實作在 `src/detection/fast_rcnn/`）。
+第一次執行會為資料版本建立並快取提案（`data/derived/<dv>/proposals/`），並下載 torchvision VGG16 ImageNet 權重（約 528 MB）。
+`evaluate_tooth_yolo` 會依 run manifest 的 model 自動使用對應推論。

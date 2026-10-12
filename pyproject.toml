@@ -21,7 +21,14 @@ dev = [
     "pytest==9.1.1",
 ]
 yolo = [
-    "ultralytics>=8.3.0,<9",
+    "ultralytics>=8.4,<9",
+    "pyyaml>=6",
+    "pycocotools>=2.0",
+    "imagehash>=4.3",
+]
+fastrcnn = [
+    "selectivesearch>=0.4",
+    "torchvision",
 ]
 segmentation = [
     "segment-anything @ git+https://github.com/facebookresearch/segment-anything.git",

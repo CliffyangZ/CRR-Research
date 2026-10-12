@@ -16,7 +16,9 @@ src/
 │       ├── cvat_coco.py      # COCO polygon 驗證、CVAT 封裝與審閱判斷
 │       ├── sam_infer.py      # SAM box／point prompt 分割與輸出
 │       └── yolo_sam_coco.py  # YOLO 偵測框引導 SAM，輸出 pseudo-label
-└── data/                   # 保留給共用資料處理，目前沒有實作
+├── data/                   # 保留給共用資料處理，目前沒有實作
+└── detection/              # 牙齒偵測：inventory、preprocess(NLM→CLAHE→USM)、letterbox、splits、augment、
+                            # dataset_export、evaluate、provenance、models、train_args（測試：tests/detection）
 ```
 
 `core/testing.py` 目前只有說明字串，不是測試框架。
