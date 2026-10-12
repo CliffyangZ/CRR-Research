@@ -22,7 +22,8 @@ src/
 └── segmentation/           # 牙齒二元語意分割（spec 002）：config、inventory、masks、transform、augment、
                             # dataset、losses、metrics、train、report（重用 detection 的前處理／letterbox／splits／provenance；
                             # 測試：tests/segmentation；U-Net 架構在 research/models/unet.py）；
-                            # spec 003 另有 roi_config、pairing、roi、roi_dataset、roi_report（單顆牙 ROI 資料集）
+                            # spec 003 另有 roi_config、pairing、roi、roi_dataset、roi_report（單顆牙 ROI 資料集）；
+                            # alveolar（以齒槽骨頂定義的臨床冠根比，候選演算法，未經醫師真值驗證）、cej_annotation（兩點標註）
 ```
 
 `core/testing.py` 目前只有說明字串，不是測試框架。
