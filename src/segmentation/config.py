@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, Field, model_validator
@@ -53,7 +54,7 @@ class Augment(BaseModel):
 
 
 class Model(BaseModel):
-    name: str = "unet"
+    name: Literal["unet", "unetpp", "attention_unet"] = "unet"
     in_channels: int = 1
     out_channels: int = 1
     base_channels: int = 32

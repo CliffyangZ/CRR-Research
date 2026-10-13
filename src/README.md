@@ -23,6 +23,8 @@ src/
                             # dataset、losses、metrics、train、report（重用 detection 的前處理／letterbox／splits／provenance；
                             # 測試：tests/segmentation；U-Net 架構在 research/models/unet.py）；
                             # spec 003 另有 roi_config、pairing、roi、roi_dataset、roi_report（單顆牙 ROI 資料集）；
+                            # spec 004 架構比較另有 protocol（比較協議凍結）、run_lock（test 一次性鎖）、boundary（HD95／boundary F1）、
+                            # compare_stats（以原圖為單位的配對 bootstrap）、compare_eval（逐 ROI 評估）；
                             # alveolar（以齒槽骨頂定義的臨床冠根比，候選演算法，未經醫師真值驗證）、cej_annotation（兩點標註）
 ```
 

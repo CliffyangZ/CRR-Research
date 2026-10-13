@@ -30,6 +30,7 @@ unet = [
     "torch",
     "pyyaml>=6",
     "imagehash>=4.3",
+    "scipy>=1.14",
 ]
 fastrcnn = [
     "selectivesearch>=0.4",

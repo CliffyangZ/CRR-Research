@@ -74,12 +74,22 @@ def _default_datasets(derived: Path, cfg, seed: int, smoke: bool):
     return tr, va
 
 
+def _peak_mb(dev: torch.device) -> float | None:
+    return round(torch.cuda.max_memory_allocated(dev) / 2**20, 1) if dev.type == "cuda" else None
+
+
 def run_training(model: torch.nn.Module, cfg, derived_dir: str | Path, output_root: str | Path,
                  device: str = "cuda:0", smoke: bool = False, command: list[str] | None = None,
                  seed: int | None = None, config_path: str | None = None, *,
-                 build_datasets=_default_datasets, evaluate=None, run_prefix: str = "unet") -> Path:
+                 build_datasets=_default_datasets, evaluate=None, run_prefix: str = "unet",
+                 grad_accum: int = 1, candidate: str | None = None, protocol: dict | None = None,
+                 override_reason: str | None = None) -> Path:
     """Generic fit loop. `build_datasets(derived, cfg, seed, smoke) -> (train_ds, val_ds)` and
-    `evaluate(model, val_ds, device, threshold, amp) -> dict` default to the whole-image segmentation setup."""
+    `evaluate(model, val_ds, device, threshold, amp) -> dict` default to the whole-image segmentation setup.
+
+    Comparison extensions (all optional, defaults keep the single-run behaviour): `grad_accum` accumulates gradients
+    over that many micro-batches of `train.batch_size`; `candidate` names the architecture; `protocol`
+    ({"version", "hash"}) marks the run as belonging to a frozen comparison protocol (otherwise exploratory)."""
     evaluate = evaluate or evaluate_split
     t = cfg.train
     seed = t.seed if seed is None else seed
@@ -99,9 +109,14 @@ def run_training(model: torch.nn.Module, cfg, derived_dir: str | Path, output_ro
         annotation_review=dm["annotation_review"], init="random_kaiming", pretrained=None,
         selection_rule="max val_dice (original coords, threshold %.2f), tie -> earlier epoch" % t.threshold,
         output_dir=str(out), weights_dir=str(weights_dir), device=str(dev),
-        nondeterminism_note="cuDNN/AMP kernels and DataLoader ordering are not bit-reproducible; single seed only.",
+        nondeterminism_note="cuDNN/AMP kernels and DataLoader ordering are not bit-reproducible; "
+                            "the same seed can give slightly different results across runs and devices.",
+        candidate=candidate, grad_accum=grad_accum,
+        batch={"size": t.batch_size, "accum": grad_accum, "effective": t.batch_size * grad_accum,
+               "override_reason": override_reason},
+        protocol_version=(protocol or {}).get("version"), protocol_hash=(protocol or {}).get("hash"),
     )
-    manifest["exploratory"] = True
+    manifest["exploratory"] = protocol is None
     mpath = out / "run_manifest.json"
     write_manifest(mpath, manifest)
     try:
@@ -115,21 +130,26 @@ def run_training(model: torch.nn.Module, cfg, derived_dir: str | Path, output_ro
         sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max_epochs, eta_min=t.scheduler.min_lr)
         scaler = torch.amp.GradScaler("cuda", enabled=t.amp and dev.type == "cuda")
         best, best_epoch, bad, history, stop_reason = -1.0, -1, 0, [], "max_epochs"
+        train_t0 = time.time()
+        if dev.type == "cuda":
+            torch.cuda.reset_peak_memory_stats(dev)
         n_params = sum(p.numel() for p in model.parameters())
         manifest["n_parameters"] = n_params
         for epoch in range(1, max_epochs + 1):
             tr.epoch = epoch
             model.train()
             t0, losses, geo = time.time(), [], {"applied": 0, "cancelled": 0, "not_selected": 0}
-            for b in dl:
+            opt.zero_grad(set_to_none=True)
+            for step, b in enumerate(dl, 1):
                 x, y = b["image"].to(dev), b["mask"].to(dev)
-                opt.zero_grad(set_to_none=True)
                 with torch.autocast(device_type=dev.type, enabled=t.amp and dev.type == "cuda"):
                     logits = model(x)
                 loss = bce_dice_loss(logits.float(), y, t.loss.bce, t.loss.dice)
-                scaler.scale(loss).backward()
-                scaler.step(opt)
-                scaler.update()
+                scaler.scale(loss / grad_accum).backward()
+                if step % grad_accum == 0 or step == len(dl):
+                    scaler.step(opt)
+                    scaler.update()
+                    opt.zero_grad(set_to_none=True)
                 losses.append(loss.item())
                 for a in b["aug"]:
                     geo[a["geometry"]] += 1
@@ -163,6 +183,7 @@ def run_training(model: torch.nn.Module, cfg, derived_dir: str | Path, output_ro
         torch.save({"model": model.state_dict(), "epoch": epoch}, weights_dir / "last.pt")
         manifest.update(
             status="succeeded",
+            train_seconds=round(time.time() - train_t0, 1), peak_gpu_mem_mb=_peak_mb(dev),
             checkpoints={
                 "best": {"path": str(weights_dir / "best.pt"), "sha256": sha256_file(weights_dir / "best.pt"),
                          "epoch": best_epoch, "val_dice": best},
@@ -176,6 +197,6 @@ def run_training(model: torch.nn.Module, cfg, derived_dir: str | Path, output_ro
         return out
     except BaseException as e:  # keep the failure record, never mark as success
         manifest.update(status="failed", failure_reason=f"{type(e).__name__}: {e}",
-                        traceback=traceback.format_exc()[-2000:])
+                        traceback=traceback.format_exc()[-2000:], peak_gpu_mem_mb=_peak_mb(dev))
         write_manifest(mpath, manifest)
         raise

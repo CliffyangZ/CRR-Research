@@ -1,0 +1,26 @@
+# Comparison protocol v1 (spec 004). Frozen with `python -m src.segmentation.protocol freeze`; never edit afterwards.
+protocol_version: v1
+data_version: roi_2a0c9441396f
+derived_root: data/derived
+reports_dir: reports/segmentation
+split_sha256: f85deef24018da12b8bc31ca37cbaaccb7e968e787c53c41b671fe1df34f7d81
+seeds: [20261012, 20261013, 20261014]
+candidates:
+  - {name: unet,           config: configs/segmentation/roi_unet_v1.yaml,           role: primary}
+  - {name: unetpp,         config: configs/segmentation/roi_unetpp_v1.yaml,         role: primary}
+  - {name: attention_unet, config: configs/segmentation/roi_attention_unet_v1.yaml, role: primary}
+threshold: 0.5
+# Only allowed deviation from batch 16, on OOM; effective batch stays 16 and the override is recorded.
+batch_fallback: {batch_size: 8, grad_accum: 2}
+metrics:
+  primary: pixel_accumulated_dice          # all test ROIs, original resolution of each ROI, padding excluded
+  secondary: [iou, precision, recall, per_roi_mean_dice, hd95_px, boundary_f1_tol2px]
+  zero_denominator: undefined_with_reason  # never silently 0 or 1
+selection: {metric: val_dice, mode: max, tie: earlier_epoch}
+statistics:
+  unit: source_image
+  method: paired_cluster_bootstrap
+  B: 10000
+  seed: 20261012
+  ci: 0.95
+  evidence_rule: ci_excludes_zero AND abs(mean_diff) > max(seed_sd_baseline, seed_sd_candidate)

@@ -1178,6 +1178,7 @@ segmentation = [
 unet = [
     { name = "imagehash" },
     { name = "pyyaml" },
+    { name = "scipy" },
     { name = "torch" },
 ]
 yolo = [
@@ -1201,6 +1202,7 @@ requires-dist = [
     { name = "pyyaml", marker = "extra == 'unet'", specifier = ">=6" },
     { name = "pyyaml", marker = "extra == 'yolo'", specifier = ">=6" },
     { name = "scikit-image", specifier = "==0.26.0" },
+    { name = "scipy", marker = "extra == 'unet'", specifier = ">=1.14" },
     { name = "segment-anything", marker = "extra == 'segmentation'", git = "https://github.com/facebookresearch/segment-anything.git" },
     { name = "selectivesearch", marker = "extra == 'fastrcnn'", specifier = ">=0.4" },
     { name = "torch", marker = "extra == 'unet'" },

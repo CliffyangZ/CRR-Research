@@ -43,6 +43,18 @@ Notebook 的互動探索放在根目錄 `notebooks/`，可重現的正式實驗�
 - 設定：`configs/segmentation/unet_baseline_v1.yaml`；使用步驟見 [`specs/002-train-unet-baseline/quickstart.md`](../specs/002-train-unet-baseline/quickstart.md)；證據在 `reports/segmentation/`。
 - 權重寫入 `models/segmentation/<run_id>/`（不入版本庫，由訓練命令重建）；`data/` 與 `reports/*` 亦被 git 忽略。
 
+## 分割架構比較（spec 004，實作中：協議凍結前）
+
+比較 U-Net++、Attention U-Net 與 baseline U-Net（同資料、同訓練配方、3 種子、隨機初始化）；候選設定與協議見
+[`specs/004-seg-arch-comparison/`](../specs/004-seg-arch-comparison/plan.md)。**尚未凍結協議、尚未做正式訓練與 test 評估。**
+
+- `research/models/{unetpp,attention_unet,registry}.py`：兩個候選（專案內自行實作，無預訓練）與 `model.name → builder`。
+- `research/train/train_tooth_seg.py`：`--model {unet,unetpp,attention_unet} --seed N [--protocol ...] [--smoke]`；帶 `--protocol` 時檢查協議已凍結、設定 hash、種子。
+- `research/evaluation/evaluate_seg_models.py`：九個採用的 run 在 test 一次性評估並寫 `test_lock.json`（重跑被拒）；`--split val` 為演練。
+- `research/evaluation/compare_seg_models.py`：以原圖為單位的配對 bootstrap、成本表、錯誤案例與 `report.md`。
+- 共用邏輯：`src/segmentation/{protocol,run_lock,boundary,compare_stats,compare_eval}.py`；協議 `configs/segmentation/compare_protocol_v1.yaml`。
+- 凍結：`python -m src.segmentation.protocol check|freeze --protocol configs/segmentation/compare_protocol_v1.yaml`。
+
 ## 資料與評估規則
 
 - 原始影像保持不變；處理後資料保留來源影像與轉換紀錄。
